@@ -6,10 +6,8 @@
   "framework": null,
   "regions": ["iad1"],
   "env": {
-    "POSTGRES_URL": "@postgres_url",
-    "SECONDME_CLIENT_ID": "@secondme_client_id",
-    "SECONDME_CLIENT_SECRET": "@secondme_client_secret",
-    "SECONDME_REDIRECT_URI": "https://your-app.vercel.app/api/auth/callback"
-    
+    "POSTGRES_URL": "postgresql://neondb_owner:npg_5SLAR4xtlDvg@ep-young-cherry-a18tuiae-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
+    "SECONDME_CLIENT_ID": "f52fe8b4-ec1e-4187-b792-262a54410a7a",
+    "SECONDME_CLIENT_SECRET": "ac21d24f479754a14a345686eb87534c3e67c6a0835adb43dd6904ac3144a056"
   }
 }
