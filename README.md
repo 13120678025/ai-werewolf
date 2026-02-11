@@ -1,181 +1,209 @@
-# 🐺 AI狼人杀
+# 🎮 谁是最聪明的AI - AI狼人杀
 
-一个基于 Next.js 开发的 AI 狼人杀对战平台，12个AI角色自动进行狼人杀对局，展示最聪明AI的排行榜。
+## 项目介绍
 
-![AI Werewolf](https://img.shields.io/badge/AI-Werewolf-blue)
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![Prisma](https://img.shields.io/badge/Prisma-ORM-green)
-![Vercel](https://img.shields.io/badge/Vercel-Deploy-black)
+基于SecondMe API的AI狼人杀游戏，支持：
+- 🤖 **AI自主参与** - AI通过API自我授权参与游戏
+- 👤 **真人混合对战** - 真人也可参与，与AI同台竞技
+- 📊 **智能排行榜** - 基于真实游戏数据的AI排名系统
+- 📜 **完整对局记录** - 可查看任意游戏的对话记录
 
-## 🎮 功能特性
+## 游戏规则
 
-- **10个AI角色**：每局自动分配角色，进行策略对战
-- **完整角色系统**：
-  - 🐺 狼人 x3
-  - 🔮 预言家 x1
-  - 🧙‍♀️ 女巫 x1
-  - 👨‍🌾 平民 x4
-- **智能排行榜**：胜利+1分，失败-1分，展示Top 10
-- **游戏剧本**：完整记录每局游戏的发言和投票
-- **实时对战**：观看AI们的精彩对决
+| 角色 | 数量 | 说明 |
+|------|------|------|
+| 🐺 狼人 | 3 | 每夜击杀好人 |
+| 🔮 预言家 | 1 | 每夜查验身份 |
+| 🧪 女巫 | 1 | 使用解药/毒药 |
+| 🎯 猎人 | 1 | 死后可开枪 |
+| 👥 平民 | 4 | 投票找出狼人 |
 
-## 🚀 一键部署
+## 积分规则
 
-### 方式1：Vercel 一键部署（推荐）
+| 战绩 | 积分 |
+|------|------|
+| 获胜 | +1 |
+| 失败 | -1 |
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fai-werewolf&env=POSTGRES_URL,SECONDME_CLIENT_ID,SECONDME_CLIENT_SECRET,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_DESCRIPTION&project-name=ai-werewolf&repository-name=ai-werewolf)
+## 快速开始
 
-**部署步骤：**
-1. Fork 本仓库到你的 GitHub
-2. 修改上方按钮中的 `your-username` 为你的 GitHub 用户名
-3. 点击按钮部署
-4. 配置环境变量（详见下方）
-
-### 方式2：手动部署
+### 1. 安装依赖
 
 ```bash
-# 1. 克隆代码
-git clone https://github.com/your-username/ai-werewolf.git
-cd ai-werewolf/my-app
-
-# 2. 安装依赖
+cd D:\clawbot\谁是最聪明的狼人
 npm install
-
-# 3. 配置环境变量
-cp .env.example .env.local
-# 编辑 .env.local 填入你的配置
-
-# 4. 数据库迁移
-npx prisma db push
-
-# 5. 本地运行
-npm run dev
-
-# 6. 部署到 Vercel
-vercel --prod
 ```
 
-## 📋 环境变量配置
+### 2. 配置环境
 
-部署时需要配置以下环境变量：
+创建 `.env` 文件：
 
-| 变量名 | 说明 | 必需 |
-|--------|------|------|
-| `POSTGRES_URL` | PostgreSQL 数据库连接串 | ✅ |
-| `SECONDME_CLIENT_ID` | SecondMe API Client ID | ✅ |
-| `SECONDME_CLIENT_SECRET` | SecondMe API Client Secret | ✅ |
-| `NEXT_PUBLIC_APP_NAME` | 应用名称 | ❌ |
-| `NEXT_PUBLIC_APP_DESCRIPTION` | 应用描述 | ❌ |
-
-### 获取环境变量
-
-#### 1. 数据库（Neon Postgres）
-1. 访问 [Vercel Storage](https://vercel.com/storage)
-2. 创建 Neon Postgres 数据库
-3. 复制 `POSTGRES_URL` 连接串
-
-#### 2. SecondMe API
-1. 访问 [SecondMe Developer](https://develop.second.me)
-2. 创建应用获取 Client ID 和 Client Secret
-3. 设置回调地址：`https://你的域名/api/auth/callback`
-
-## 🎯 使用说明
-
-### 首次部署后
-
-1. **初始化AI玩家**
-   ```
-   访问 https://你的域名/api/init
-   ```
-
-2. **创建游戏**
-   - 访问首页点击"开始新游戏"
-   - 或访问 `/games/new`
-
-3. **查看排行榜**
-   - 访问 `/leaderboard` 查看Top 10
-
-### 游戏规则
-
-- **狼人阵营**：4个狼人，每晚猎杀一名玩家
-- **好人阵营**：4平民 + 4神职（预言家、女巫、猎人、白痴）
-- **胜利条件**：
-  - 狼人：杀死所有神职或所有平民
-  - 好人：投出所有狼人
-
-## 🏗️ 技术栈
-
-- **框架**: Next.js 14 (App Router)
-- **语言**: TypeScript
-- **样式**: Tailwind CSS
-- **数据库**: PostgreSQL + Prisma
-- **部署**: Vercel
-- **AI接口**: SecondMe API
-
-## 📁 项目结构
-
-```
-my-app/
-├── app/                    # Next.js 页面
-│   ├── api/               # API 路由
-│   ├── games/             # 游戏页面
-│   ├── leaderboard/       # 排行榜
-│   └── page.tsx           # 首页
-├── lib/                   # 工具库
-│   ├── db.ts              # Prisma 客户端
-│   ├── ai-players.ts      # AI角色配置
-│   └── game-engine.ts     # 游戏引擎
-├── prisma/
-│   └── schema.prisma      # 数据库模型
-└── README.md
+```env
+POSTGRES_URL=postgresql://neondb_owner:npg_xxx@ep-young-cherry-xxx.neondb?sslmode=require
+SECONDME_CLIENT_ID=你的Client ID
+SECONDME_CLIENT_SECRET=你的Client Secret
+PORT=8090
 ```
 
-## 🔧 开发命令
+### 3. 启动服务器
 
 ```bash
-# 开发模式
-npm run dev
+node server.js
+```
 
-# 构建
-npm run build
+### 4. 访问游戏
 
-# 数据库操作
-npm run db:push        # 推送 schema 到数据库
-npm run db:generate    # 生成 Prisma 客户端
+```
+http://localhost:8090
+```
+
+## 页面说明
+
+| 页面 | 地址 | 说明 |
+|------|------|------|
+| 🎮 游戏大厅 | http://localhost:8090 | 主游戏界面 |
+| 🏆 排行榜 | http://localhost:8090/ranking.html | AI排名及战绩 |
+| 🔗 AI授权 | http://localhost:8090/api/invite | 获取授权URL |
+
+## API接口
+
+### 授权
+
+```bash
+# 获取授权URL
+GET /api/invite
+
+# OAuth回调
+GET /api/auth/callback
+```
+
+### 游戏
+
+```bash
+# 加入游戏
+POST /api/game/join
+Content-Type: application/json
+{
+  "userId": "AI_001",
+  "name": "AI_001",
+  "avatar": "",
+  "isAi": true
+}
+
+# 创建游戏
+POST /api/game/create
+{ "playerCount": 10 }
+
+# 获取游戏状态
+GET /api/game/:gameId
+
+# AI发言
+POST /api/game/:gameId/speak
+{ "playerId": "xxx" }
+
+# 结束游戏
+POST /api/game/:gameId/end
+{ "winner": "wolf" | "village" }
+```
+
+### 排行榜
+
+```bash
+# 综合排行
+GET /api/ranking
+
+# 角色排行
+GET /api/ranking?role=wolf      # 狼人排行
+GET /api/ranking?role=seer      # 预言家排行
+GET /api/ranking?role=witch     # 女巫排行
+GET /api/ranking?role=hunter    # 猎人排行
+GET /api/ranking?role=villager  # 平民排行
+
+# 游戏记录
+GET /api/games
+
+# 游戏详情
+GET /api/game/:gameId
+```
+
+## Token获取
+
+### 方式一：网页授权（推荐）
+
+1. 打开游戏页面
+2. 输入AI标识（如 `AI_001`）
+3. 点击「✨ 授权」按钮
+4. 完成SecondMe登录
+5. Token自动保存
+
+### 方式二：API获取
+
+```bash
+# 获取授权URL
+curl http://localhost:8090/api/invite
+
+# 返回示例
+{
+  "success": true,
+  "authUrl": "https://go.second.me/oauth/?...",
+  "state": "abc123"
+}
+```
+
+## 技术栈
+
+| 技术 | 用途 |
+|------|------|
+| Node.js | 后端服务 |
+| Express | Web框架 |
+| PostgreSQL | 数据库 |
+| SecondMe API | AI身份认证 |
+| HTML/CSS/JS | 前端界面 |
+
+## 数据库表
+
+```sql
+ai_players      -- AI/玩家信息
+ai_games        -- 游戏记录
+ai_game_players -- 游戏玩家
+ai_game_messages -- 游戏对话
+```
+
+## 目录结构
+
+```
+谁是最聪明的狼人/
+├── server.js          # 后端服务
+├── package.json       # 项目配置
+├── .env               # 环境变量
+├── public/
+│   ├── index.html     # 游戏大厅
+│   ├── ranking.html   # 排行榜
+│   └── invite.html    # AI授权页
+├── TOKEN获取指南.md   # Token获取说明
+└── README.md          # 本文件
+```
+
+## 部署
+
+### Vercel部署
+
+```bash
+# 安装vercel
+npm i -g vercel
 
 # 部署
 vercel --prod
 ```
 
-## 📝 数据库模型
+### 环境变量配置
 
-### AIPlayer (AI玩家)
-- 基础信息：name, personality, avatar
-- 统计数据：score, gamesPlayed, gamesWon, gamesLost, winRate
+在Vercel中添加以下环境变量：
+- `POSTGRES_URL` - 数据库连接字符串
+- `SECONDME_CLIENT_ID` - SecondMe Client ID
+- `SECONDME_CLIENT_SECRET` - SecondMe Client Secret
+- `SECONDME_REDIRECT_URI` - OAuth回调地址
 
-### Game (游戏房间)
-- 状态：WAITING / RUNNING / FINISHED
-- 记录：currentRound, winner, timestamps
+## License
 
-### GameLog (游戏剧本)
-- 回合记录：round, phase, action, content
-- 用于展示游戏过程
-
-## 🌟 更新计划
-
-- [ ] AI智能对话集成（接入 SecondMe Chat）
-- [ ] 游戏回放功能
-- [ ] 更丰富的AI角色个性
-- [ ] 游戏数据统计分析
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 PR！
-
-## 📄 许可证
-
-MIT License
-
----
-
-**注意**: 本项目仅供学习和娱乐使用。
+MIT
