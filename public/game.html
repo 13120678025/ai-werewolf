@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐺 游戏进行中 - AI狼人杀</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary: #00f0ff;
+      --wolf: #ff4757;
+      --good: #2ed573;
+      --gold: #ffd700;
+      --bg-dark: #0a0a0f;
+      --bg-panel: rgba(20, 20, 30, 0.9);
+      --border-glow: rgba(0, 240, 255, 0.3);
+    }
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-dark);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
+    }
+    
+    body.night-mode {
+      background: linear-gradient(180deg, #0a0a0f 0%, #1a0a0f 100%);
+    }
+    
+    body.day-mode {
+      background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+    }
+    
+    /* 主布局 */
+    .game-container {
+      display: grid;
+      grid-template-columns: 280px 1fr 300px;
+      gap: 20px;
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    /* 顶部状态栏 */
+    .top-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+      background: var(--bg-panel);
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+    }
+    
+    .game-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+    
+    .game-info {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    .day-indicator {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-weight: 700;
+    }
+    
+    .day-indicator.night {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--wolf);
+      box-shadow: 0 0 20px rgba(255, 71, 87, 0.3);
+    }
+    
+    .day-indicator.day {
+      background: rgba(255, 215, 0, 0.2);
+      color: var(--gold);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    
+    .phase-indicator {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .alive-count {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .count-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    
+    .count-wolf {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--wolf);
+    }
+    
+    .count-good {
+      background: rgba(46, 213, 115, 0.2);
+      color: var(--good);
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    /* 玩家列表（左侧） */
+    .players-panel {
+      background: var(--bg-panel);
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(100vh - 100px);
+    }
+    
+    .panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .player-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .player-card.current-speaker {
+      border-color: var(--gold);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .player-card.dead {
+      opacity: 0.5;
+      filter: grayscale(1);
+    }
+    
+    .player-card.dead::after {
+      content: '☠️';
+      position: absolute;
+      right: 10px;
+      font-size: 1.2rem;
+    }
+    
+    .player-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+    
+    .player-avatar.wolf { border-color: var(--wolf); }
+    .player-avatar.seer { border-color: var(--primary); }
+    .player-avatar.witch { border-color: #a55eea; }
+    .player-avatar.hunter { border-color: var(--gold); }
+    .player-avatar.villager { border-color: var(--good); }
+    
+    .player-info {
+      flex: 1;
+    }
+    
+    .player-name {
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .player-role {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .player-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    
+    .badge-ai {
+      background: rgba(0, 240, 255, 0.2);
+      color: var(--primary);
+    }
+    
+    .badge-human {
+      background: rgba(46, 213, 115, 0.2);
+      color: var(--good);
+    }
+    
+    .player-status {
+      font-size: 0.8rem;
+      color: var(--good);
+    }
+    
+    .player-status.dead {
+      color: var(--wolf);
+    }
+    
+    /* 对话区域（中间） */
+    .chat-panel {
+      background: var(--bg-panel);
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .chat-header {
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: messageIn 0.3s ease;
+    }
+    
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message.system {
+      justify-content: center;
+    }
+    
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    
+    .message-content {
+      flex: 1;
+      max-width: 80%;
+    }
+    
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    
+    .message-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .message-role {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      border-top-left-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    
+    .message.system .message-bubble {
+      background: rgba(255, 215, 0, 0.1);
+      color: var(--gold);
+      text-align: center;
+      border-radius: 20px;
+    }
+    
+    .message.system.death .message-bubble {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--wolf);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+    }
+    
+    .message.system.vote-start .message-bubble {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      font-weight: 600;
+    }
+    
+    .message.system.vote-detail .message-bubble {
+      background: rgba(0, 240, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      padding: 10px 14px;
+    }
+    
+    .message.system.vote-result .message-bubble {
+      background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 215, 0, 0.1));
+      color: var(--gold);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      font-weight: 600;
+    }
+    
+    .message.system.hunter .message-bubble {
+      background: rgba(255, 165, 2, 0.15);
+      color: var(--gold);
+      border: 1px solid rgba(255, 165, 2, 0.3);
+    }
+    
+    .message-time {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 5px;
+    }
+    
+    /* 信息面板（右侧） */
+    .info-panel {
+      background: var(--bg-panel);
+      border-radius: 16px;
+      border: 1px solid var(--border-glow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      max-height: calc(100vh - 100px);
+    }
+    
+    .info-section {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 15px;
+    }
+    
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .phase-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .phase-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    
+    .phase-item.active {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--primary);
+    }
+    
+    .phase-item.completed {
+      opacity: 0.5;
+    }
+    
+    .phase-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+    
+    /* 投票区域 */
+    .vote-section {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 15px;
+    }
+    
+    .vote-progress {
+      margin-top: 10px;
+    }
+    
+    .vote-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    
+    .vote-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    
+    .vote-targets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .vote-target {
+      padding: 5px 12px;
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--wolf);
+      border-radius: 15px;
+      font-size: 0.8rem;
+    }
+    
+    /* 操作按钮 */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .btn {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #0099cc 100%);
+      color: #000;
+    }
+    
+    .btn-primary:hover {
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+      transform: translateY(-2px);
+    }
+    
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, #ffaa00 100%);
+      color: #000;
+    }
+    
+    .btn-gold:hover {
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(0, 240, 255, 0.1);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* 胜利弹窗 */
+    .winner-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .winner-modal.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .winner-content {
+      text-align: center;
+      animation: winnerPop 0.5s ease;
+    }
+    
+    @keyframes winnerPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .winner-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      font-weight: 900;
+      margin-bottom: 30px;
+      text-shadow: 0 0 50px currentColor;
+    }
+    
+    .winner-title.wolf { color: var(--wolf); }
+    .winner-title.village { color: var(--good); }
+    
+    .winner-text {
+      font-size: 1.5rem;
+      margin-bottom: 40px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .winner-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .game-container {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+      
+      .players-panel,
+      .info-panel {
+        max-height: none;
+      }
+      
+      .chat-panel {
+        order: -1;
+        min-height: 400px;
+      }
+    }
+    
+    /* 滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
+    
+    /* 加载动画 */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 倒计时 */
+    .countdown {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--gold);
+      animation: countdownPulse 1s infinite;
+    }
+    
+    @keyframes countdownPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- 顶部状态栏 -->
+    <div class="top-bar">
+      <div class="game-title">🐺 AI狼人杀 · <span id="gameId">LOADING...</span></div>
+      
+      <div class="game-info">
+        <div class="day-indicator night" id="dayIndicator">
+          第 <span id="dayNum">0</span> 天
+        </div>
+        <div class="phase-indicator" id="phaseIndicator">等待开始</div>
+        
+        <div class="alive-count">
+          <div class="count-item count-wolf">
+            <span>🐺</span> <span id="wolfCount">3</span> 狼
+          </div>
+          <div class="count-item count-good">
+            <span>👥</span> <span id="goodCount">7</span> 好人
+          </div>
+        </div>
+      </div>
+      
+      <div class="controls">
+        <button class="btn btn-secondary" id="nextBtn" onclick="nextPhase()">
+          ⏭️ 下一步
+        </button>
+        <button class="btn btn-primary" id="autoBtn" onclick="autoPlay()">
+          ⚡ 自动
+        </button>
+      </div>
+    </div>
+    
+    <!-- 玩家列表 -->
+    <div class="players-panel">
+      <h3 class="panel-title">👥 玩家列表</h3>
+      <div class="player-list" id="playerList">
+        <!-- 玩家卡片将通过JS渲染 -->
+      </div>
+    </div>
+    
+    <!-- 对话区域 -->
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span class="chat-title">💬 对话记录</span>
+        <span id="speakerInfo"></span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="message system">
+          <div class="message-content">
+            <div class="message-bubble">🎮 游戏即将开始，请等待...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 信息面板 -->
+    <div class="info-panel">
+      <div class="info-section">
+        <div class="section-title">📋 游戏阶段</div>
+        <div class="phase-timeline" id="phaseTimeline">
+          <div class="phase-item active" data-phase="waiting">
+            <div class="phase-icon">⏳</div>
+            <span>等待开始</span>
+          </div>
+          <div class="phase-item" data-phase="night_wolf">
+            <div class="phase-icon">🐺</div>
+            <span>狼人行动</span>
+          </div>
+          <div class="phase-item" data-phase="night_seer">
+            <div class="phase-icon">🔮</div>
+            <span>预言家查验</span>
+          </div>
+          <div class="phase-item" data-phase="night_witch">
+            <div class="phase-icon">🧪</div>
+            <span>女巫行动</span>
+          </div>
+          <div class="phase-item" data-phase="dawn">
+            <div class="phase-icon">🌅</div>
+            <span>天亮公告</span>
+          </div>
+          <div class="phase-item" data-phase="day_speech">
+            <div class="phase-icon">🗣️</div>
+            <span>白天发言</span>
+          </div>
+          <div class="phase-item" data-phase="vote">
+            <div class="phase-icon">🗳️</div>
+            <span>投票放逐</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="vote-section" id="voteSection" style="display: none;">
+        <div class="section-title">🗳️ 投票结果</div>
+        <div class="vote-progress">
+          <div class="vote-bar">
+            <div class="vote-fill" id="voteFill" style="width: 0%"></div>
+          </div>
+          <div class="vote-targets" id="voteTargets"></div>
+        </div>
+      </div>
+      
+      <div class="info-section">
+        <div class="section-title">📖 游戏规则</div>
+        <p style="font-size: 0.85rem; line-height: 1.6; color: rgba(255,255,255,0.7);">
+          好人阵营消灭所有狼人即可获胜。狼人阵营人数 ≥ 好人阵营时获胜。
+        </p>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-gold" onclick="location.href='/ranking'">
+          🏆 查看排行榜
+        </button>
+        <button class="btn btn-secondary" onclick="location.href='/'">
+          🏠 返回大厅
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 胜利弹窗 -->
+  <div class="winner-modal" id="winnerModal">
+    <div class="winner-content">
+      <h1 class="winner-title" id="winnerTitle">游戏结束</h1>
+      <p class="winner-text" id="winnerText">获胜阵营</p>
+      <div class="winner-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="statDays">0</div>
+          <div class="stat-label">游戏天数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="statDeaths">0</div>
+          <div class="stat-label">死亡人数</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="location.href='/'">返回大厅</button>
+    </div>
+  </div>
+  
+  <script>
+    // 游戏状态
+    let gameState = null;
+    let gameId = '';
+    let autoPlayInterval = null;
+    
+    // 获取游戏ID
+    gameId = window.location.pathname.split('/').pop();
+    document.getElementById('gameId').textContent = gameId.slice(-8).toUpperCase();
+    
+    // 加载游戏状态
+    async function loadGame() {
+      try {
+        const res = await fetch(`/api/game/${gameId}`);
+        gameState = await res.json();
+        renderGame();
+      } catch (e) {
+        console.error('加载游戏失败:', e);
+      }
+    }
+    
+    // 渲染游戏界面
+    function renderGame() {
+      if (!gameState) return;
+      
+      // 更新天数和阶段
+      document.getElementById('dayNum').textContent = gameState.day || 0;
+      
+      const phaseNames = {
+        'waiting': '等待开始',
+        'night_wolf': '狼人行动',
+        'night_seer': '预言家查验',
+        'night_witch': '女巫行动',
+        'dawn': '天亮公告',
+        'day_speech': '白天发言',
+        'vote': '投票',
+        'hunter_shoot': '猎人开枪',
+        'ended': '游戏结束'
+      };
+      
+      const phase = gameState.phase || 'waiting';
+      document.getElementById('phaseIndicator').textContent = phaseNames[phase] || phase;
+      
+      // 更新昼夜显示
+      const dayIndicator = document.getElementById('dayIndicator');
+      if (phase.includes('night')) {
+        dayIndicator.className = 'day-indicator night';
+        document.body.className = 'night-mode';
+      } else {
+        dayIndicator.className = 'day-indicator day';
+        document.body.className = 'day-mode';
+      }
+      
+      // 更新存活人数
+      const aliveCount = { wolf: 0, village: 0 };
+      gameState.players?.forEach(p => {
+        if (p.alive) {
+          if (p.team === 'wolf') aliveCount.wolf++;
+          else aliveCount.village++;
+        }
+      });
+      document.getElementById('wolfCount').textContent = aliveCount.wolf;
+      document.getElementById('goodCount').textContent = aliveCount.village;
+      
+      // 更新玩家列表
+      renderPlayers();
+      
+      // 更新对话
+      renderMessages();
+      
+      // 更新阶段时间线
+      updatePhaseTimeline(phase);
+      
+      // 检查胜利
+      if (gameState.winner) {
+        showWinner();
+      }
+    }
+    
+    // 渲染玩家列表
+    function renderPlayers() {
+      const playerList = document.getElementById('playerList');
+      
+      if (!gameState.players) {
+        playerList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5);">等待玩家...</p>';
+        return;
+      }
+      
+      playerList.innerHTML = gameState.players.map((p, i) => {
+        const roleClass = p.role?.toLowerCase() || 'villager';
+        const isCurrentSpeaker = gameState.phase === 'day_speech' && 
+                                  gameState.currentSpeakerIndex === i;
+        
+        // 座位号显示
+        const seatNumber = p.seatNumber ? `${p.seatNumber}号` : `${i + 1}号`;
+        
+        // 死亡信息
+        let deathInfo = '';
+        if (!p.alive) {
+          deathInfo = `<div style="font-size: 0.75rem; color: var(--wolf); margin-top: 4px;">
+            💀 ${p.deathReason || '已死亡'} ${p.deathDay ? `(第${p.deathDay}天)` : ''}
+          </div>`;
+        }
+        
+        return `
+          <div class="player-card ${p.alive ? '' : 'dead'} ${isCurrentSpeaker ? 'current-speaker' : ''}" 
+               onclick="showPlayerInfo('${p.userId}')">
+            <div class="player-avatar ${roleClass}">
+              ${p.seatNumber || i + 1}
+            </div>
+            <div class="player-info">
+              <div class="player-name">
+                <span style="background: rgba(255,215,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 6px;">
+                  ${seatNumber}
+                </span>
+                ${p.name}
+                ${p.isAi ? '<span class="player-badge badge-ai">AI</span>' : '<span class="player-badge badge-human">玩家</span>'}
+              </div>
+              <div class="player-role">
+                ${p.roleName || p.role} · ${p.team === 'wolf' ? '🐺 狼人' : '🧑 好人'}
+              </div>
+              ${deathInfo}
+            </div>
+            <div class="player-status ${p.alive ? '' : 'dead'}">
+              ${p.alive ? '✅' : '💀'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 渲染消息
+    function renderMessages() {
+      const chatMessages = document.getElementById('chatMessages');
+      
+      if (!gameState.messages || gameState.messages.length === 0) {
+        return;
+      }
+      
+      const roleIcons = { '狼人': '🐺', '预言家': '🔮', '女巫': '🧪', '猎人': '🎯', '平民': '👥' };
+      
+      chatMessages.innerHTML = gameState.messages.map(msg => {
+        // 系统消息
+        if (msg.speakerName === 'system') {
+          let systemClass = 'system';
+          let icon = '📢';
+          
+          if (msg.messageType === 'death') {
+            systemClass = 'system death';
+            icon = '💀';
+          } else if (msg.messageType === 'vote_result') {
+            systemClass = 'system vote-result';
+            icon = '🗳️';
+          } else if (msg.messageType === 'vote_detail') {
+            systemClass = 'system vote-detail';
+            icon = '🗳️';
+          } else if (msg.messageType === 'hunter_shoot') {
+            systemClass = 'system hunter';
+            icon = '🔫';
+          } else if (msg.messageType === 'vote_start') {
+            systemClass = 'system vote-start';
+            icon = '🗳️';
+          }
+          
+          return `
+            <div class="message ${systemClass}">
+              <div class="message-content" style="max-width: 100%;">
+                <div class="message-bubble" style="text-align: center;">
+                  <span style="margin-right: 8px;">${icon}</span>${msg.message}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        // 普通发言
+        return `
+          <div class="message">
+            <div class="message-avatar">${roleIcons[msg.speakerRole] || '👤'}</div>
+            <div class="message-content">
+              <div class="message-header">
+                <span class="message-name">${msg.speakerName}</span>
+                <span style="background: rgba(255,215,0,0.2); padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; margin-right: 6px;">
+                  ${msg.turn ? `${msg.turn}号` : ''}
+                </span>
+                <span class="message-role">${msg.speakerRole}</span>
+              </div>
+              <div class="message-bubble">${msg.message}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // 滚动到底部
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // 更新阶段时间线
+    function updatePhaseTimeline(currentPhase) {
+      const phases = ['waiting', 'night_wolf', 'night_seer', 'night_witch', 'dawn', 'day_speech', 'vote'];
+      
+      document.querySelectorAll('.phase-item').forEach(item => {
+        const phase = item.dataset.phase;
+        item.classList.remove('active', 'completed');
+        
+        if (phase === currentPhase) {
+          item.classList.add('active');
+        } else if (phases.indexOf(phase) < phases.indexOf(currentPhase)) {
+          item.classList.add('completed');
+        }
+      });
+    }
+    
+    // 下一步
+    async function nextPhase() {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> 处理中...';
+      
+      try {
+        const res = await fetch(`/api/game/${gameId}/next`, {
+          method: 'POST'
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          gameState = data;
+          renderGame();
+        }
+      } catch (e) {
+        console.error('推进失败:', e);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '⏭️ 下一步';
+      }
+    }
+    
+    // 自动播放
+    async function autoPlay() {
+      const btn = document.getElementById('autoBtn');
+      
+      if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+        btn.textContent = '⚡ 自动';
+        btn.classList.remove('btn-gold');
+      } else {
+        btn.textContent = '⏹️ 停止';
+        btn.classList.add('btn-gold');
+        
+        autoPlayInterval = setInterval(async () => {
+          if (gameState?.winner) {
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = null;
+            btn.textContent = '⚡ 自动';
+            return;
+          }
+          
+          try {
+            const res = await fetch(`/api/game/${gameId}/next`, {
+              method: 'POST'
+            });
+            
+            const data = await res.json();
+            if (data.success) {
+              gameState = data;
+              renderGame();
+            }
+          } catch (e) {
+            console.error('自动推进失败:', e);
+          }
+        }, 3000);
+      }
+    }
+    
+    // 显示胜利
+    function showWinner() {
+      if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+      }
+      
+      const modal = document.getElementById('winnerModal');
+      const title = document.getElementById('winnerTitle');
+      const text = document.getElementById('winnerText');
+      
+      if (gameState.winner === 'wolf') {
+        title.textContent = '🐺 狼人阵营获胜！';
+        title.className = 'winner-title wolf';
+        text.textContent = '暗影吞噬了光明...';
+      } else {
+        title.textContent = '👥 好人阵营获胜！';
+        title.className = 'winner-title village';
+        text.textContent = '光明战胜了黑暗！';
+      }
+      
+      document.getElementById('statDays').textContent = gameState.day || 0;
+      document.getElementById('statDeaths').textContent = gameState.players?.filter(p => !p.alive).length || 0;
+      
+      modal.classList.add('active');
+    }
+    
+    // 定期刷新
+    function startPolling() {
+      setInterval(() => {
+        if (!gameState?.winner) {
+          loadGame();
+        }
+      }, 5000);
+    }
+    
+    // 初始化
+    loadGame();
+    startPolling();
+  </script>
+</body>
+</html>
