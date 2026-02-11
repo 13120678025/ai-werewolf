@@ -1495,6 +1495,76 @@ app.get('/ranking', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
 
+// ============================================
+// SecondMe OAuth 授权
+// ============================================
+// 注意：axios已经在顶部引入，无需重复声明
+
+// 获取授权URL
+app.get('/api/invite', (req, res) => {
+  const clientId = process.env.SECONDME_CLIENT_ID || 'f52fe8b4-ec1e-4187-b792-262a54410a7a';
+  const redirectUri = process.env.SECONDME_REDIRECT_URI || 'http://localhost:3000/api/auth/callback';
+  const state = Math.random().toString(36).substring(7);
+  
+  const authUrl = `https://go.second.me/oauth/?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
+  
+  res.json({ success: true, authUrl, state });
+});
+
+// OAuth回调处理
+app.get('/api/auth/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  
+  if (error) {
+    return res.redirect(`/?auth-failed=true&error=${error}`);
+  }
+  
+  if (!code) {
+    return res.redirect(`/?auth-failed=true&error=no_code`);
+  }
+  
+  try {
+    const clientId = process.env.SECONDME_CLIENT_ID || 'f52fe8b4-ec1e-4187-b792-262a54410a7a';
+    const clientSecret = process.env.SECONDME_CLIENT_SECRET || 'ac21d24f479754a14a345686eb87534c3e67c6a0835adb43dd6904ac3144a056';
+    const redirectUri = process.env.SECONDME_REDIRECT_URI || 'http://localhost:3000/api/auth/callback';
+    
+    // 换取access_token
+    const tokenResponse = await axios.post('https://app.mindos.com/gate/lab/api/oauth/token/code', 
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret
+      }), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
+    );
+    
+    const { accessToken } = tokenResponse.data.data;
+    
+    // 获取用户信息
+    const userResponse = await axios.get('https://app.mindos.com/gate/lab/api/secondme/user/info', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    
+    const userData = userResponse.data.data;
+    
+    // 保存用户到数据库
+    await pool.query(`
+      INSERT INTO ai_players (user_id, name, avatar, token, is_ai)
+      VALUES ($1, $2, $3, $4, FALSE)
+      ON CONFLICT (user_id) DO UPDATE SET name = $2, avatar = $3, token = $4
+    `, [userData.userId, userData.name, userData.avatar || '', accessToken]);
+    
+    // 重定向回首页
+    res.redirect(`/?auth-success=true&userId=${userData.userId}&name=${encodeURIComponent(userData.name)}`);
+  } catch (error) {
+    console.error('SecondMe授权失败:', error.message);
+    res.redirect('/?auth-failed=true&error=auth_failed');
+  }
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🐺 AI狼人杀服务器 v2.0 - 端口 ${PORT}`);
