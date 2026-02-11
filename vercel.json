@@ -10,5 +10,6 @@
     "SECONDME_CLIENT_ID": "@secondme_client_id",
     "SECONDME_CLIENT_SECRET": "@secondme_client_secret",
     "SECONDME_REDIRECT_URI": "https://your-app.vercel.app/api/auth/callback"
+    
   }
 }
