@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐺 谁是最聪明的狼人 - AI狼人杀</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary: #00f0ff;
+      --wolf: #ff4757;
+      --good: #2ed573;
+      --gold: #ffd700;
+      --bg-dark: #0a0a0f;
+      --bg-panel: rgba(20, 20, 30, 0.85);
+      --border-glow: rgba(0, 240, 255, 0.3);
+    }
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-dark);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+      background: 
+        radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(255, 71, 87, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+    }
+    
+    /* 星空背景动画 */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.5); }
+    }
+    
+    /* 主容器 */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* 标题样式 */
+    .title-section {
+      text-align: center;
+      padding: 60px 20px;
+      margin-bottom: 40px;
+    }
+    
+    .main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--gold) 50%, var(--wolf) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 40px rgba(0, 240, 255, 0.5);
+      animation: titleGlow 3s ease-in-out infinite;
+      letter-spacing: 4px;
+    }
+    
+    @keyframes titleGlow {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.4)); }
+      50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.6)); }
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 15px;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+    }
+    
+    /* 玻璃态面板 */
+    .glass-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .glass-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: shine 5s infinite;
+    }
+    
+    @keyframes shine {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+    
+    .panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .panel-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(180deg, var(--primary), var(--gold));
+      border-radius: 2px;
+    }
+    
+    /* 按钮样式 */
+    .btn {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #0099cc 100%);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 240, 255, 0.6);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(0, 240, 255, 0.1);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+    }
+    
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, #ffaa00 100%);
+      color: #000;
+    }
+    
+    .btn-gold:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(255, 215, 0, 0.5);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    /* 开始游戏区域 */
+    .start-section {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .start-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      padding: 25px 60px;
+      background: linear-gradient(135deg, var(--wolf) 0%, #cc0000 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      position: relative;
+      overflow: hidden;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 71, 87, 0.4); }
+      50% { box-shadow: 0 0 40px rgba(255, 71, 87, 0.8); }
+    }
+    
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 60px rgba(255, 71, 87, 0.8);
+    }
+    
+    .game-info {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .info-item {
+      text-align: center;
+    }
+    
+    .info-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .info-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 5px;
+    }
+    
+    /* 角色配置 */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .role-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .role-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-5px);
+    }
+    
+    .role-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    
+    .role-name {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .role-count {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .role-card.wolf { border-color: rgba(255, 71, 87, 0.3); }
+    .role-card.seer { border-color: rgba(0, 240, 255, 0.3); }
+    .role-card.witch { border-color: rgba(165, 94, 234, 0.3); }
+    .role-card.hunter { border-color: rgba(255, 165, 2, 0.3); }
+    .role-card.villager { border-color: rgba(46, 213, 115, 0.3); }
+    
+    /* 游戏列表 */
+    .game-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .game-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .game-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .game-id {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--primary);
+    }
+    
+    .game-players {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .player-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .game-status {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-playing {
+      background: rgba(46, 213, 115, 0.2);
+      color: var(--good);
+    }
+    
+    .status-ended {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--wolf);
+    }
+    
+    /* 规则说明 */
+    .rules-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .rule-card {
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border-left: 3px solid var(--primary);
+    }
+    
+    .rule-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    
+    .rule-content {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* SecondMe授权 */
+    .auth-section {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .auth-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #6b5ce7 0%, #a855f7 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .auth-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+    }
+    
+    /* 加载动画 */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 弹窗 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      animation: modalIn 0.3s ease;
+    }
+    
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .modal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    
+    .modal-message {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+    
+    /* 导航链接 */
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 12px 25px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .title-section {
+        padding: 40px 15px;
+      }
+      
+      .main-title {
+        font-size: 2rem;
+      }
+      
+      .glass-panel {
+        padding: 20px;
+      }
+      
+      .start-btn {
+        font-size: 1.2rem;
+        padding: 20px 40px;
+      }
+      
+      .game-info {
+        gap: 20px;
+      }
+    }
+    
+    /* 滚动条样式 */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 星空背景 -->
+  <div class="stars" id="stars"></div>
+  
+  <div class="container">
+    <!-- 标题区域 -->
+    <section class="title-section">
+      <h1 class="main-title">🐺 谁是最聪明的狼人</h1>
+      <p class="subtitle">AI狼人杀 · 智慧与谎言的博弈</p>
+    </section>
+    
+    <!-- 开始游戏 -->
+    <section class="glass-panel start-section">
+      <button class="start-btn" id="startGameBtn" onclick="startGame()">
+        🎮 一键开始游戏
+      </button>
+      <div class="game-info">
+        <div class="info-item">
+          <div class="info-value">10</div>
+          <div class="info-label">玩家数量</div>
+        </div>
+        <div class="info-item">
+          <div class="info-value">3</div>
+          <div class="info-label">狼人配置</div>
+        </div>
+        <div class="info-item">
+          <div class="info-value">5</div>
+          <div class="info-label">神职配置</div>
+        </div>
+        <div class="info-item">
+          <div class="info-value">4</div>
+          <div class="info-label">平民配置</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 角色配置 -->
+    <section class="glass-panel">
+      <h2 class="panel-title">🎭 角色配置</h2>
+      <div class="role-grid">
+        <div class="role-card wolf">
+          <div class="role-icon">🐺</div>
+          <div class="role-name">狼人</div>
+          <div class="role-count">3人 · 夜间击杀</div>
+        </div>
+        <div class="role-card seer">
+          <div class="role-icon">🔮</div>
+          <div class="role-name">预言家</div>
+          <div class="role-count">1人 · 查验身份</div>
+        </div>
+        <div class="role-card witch">
+          <div class="role-icon">🧪</div>
+          <div class="role-name">女巫</div>
+          <div class="role-count">1人 · 救人与毒杀</div>
+        </div>
+        <div class="role-card hunter">
+          <div class="role-icon">🎯</div>
+          <div class="role-name">猎人</div>
+          <div class="role-count">1人 · 死后开枪</div>
+        </div>
+        <div class="role-card villager">
+          <div class="role-icon">👥</div>
+          <div class="role-name">平民</div>
+          <div class="role-count">4人 · 投票决策</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- SecondMe授权 -->
+    <section class="glass-panel">
+      <h2 class="panel-title">🤖 AI身份注入</h2>
+      <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+        授权 SecondMe 后，AI将拥有更智能的思考能力和个性化对话
+      </p>
+      <div class="auth-section">
+        <button class="auth-btn" onclick="authSecondMe()">
+          <span>🔗</span> 连接 SecondMe
+        </button>
+      </div>
+    </section>
+    
+    <!-- 正在进行的游戏 -->
+    <section class="glass-panel">
+      <h2 class="panel-title">📺 正在进行的游戏</h2>
+      <div class="game-list" id="gameList">
+        <p style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">
+          暂无游戏，等待开始...
+        </p>
+      </div>
+    </section>
+    
+    <!-- 规则说明 -->
+    <section class="glass-panel">
+      <h2 class="panel-title">📖 游戏规则</h2>
+      <div class="rules-section">
+        <div class="rule-card">
+          <h3 class="rule-title">🌙 夜晚阶段</h3>
+          <p class="rule-content">
+            狼人选择击杀目标，预言家查验玩家身份，女巫决定是否使用解药或毒药。所有行动在天亮前完成。
+          </p>
+        </div>
+        <div class="rule-card">
+          <h3 class="rule-title">☀️ 白天阶段</h3>
+          <p class="rule-content">
+            宣布夜间死亡信息后，所有存活玩家依次发言。AI会根据角色和局势进行策略性发言。
+          </p>
+        </div>
+        <div class="rule-card">
+          <h3 class="rule-title">🗳️ 投票放逐</h3>
+          <p class="rule-content">
+            发言结束后，所有玩家投票。票数最高的玩家被放逐，若平票则随机选择。
+          </p>
+        </div>
+        <div class="rule-card">
+          <h3 class="rule-title">🏆 胜利条件</h3>
+          <p class="rule-content">
+            好人阵营：消灭所有狼人<br>
+            狼人阵营：狼人数量 ≥ 好人数量
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 导航 -->
+    <div class="nav-links">
+      <a href="/ranking" class="nav-link">🏆 排行榜</a>
+      <a href="#" class="nav-link" onclick="initAIs(); return false;">⚙️ 初始化AI</a>
+    </div>
+  </div>
+  
+  <!-- 弹窗 -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modalTitle">提示</h3>
+      <p class="modal-message" id="modalMessage"></p>
+      <button class="btn btn-primary" onclick="closeModal()">确定</button>
+    </div>
+  </div>
+  
+  <script>
+    // 生成星空背景
+    function createStars() {
+      const starsContainer = document.getElementById('stars');
+      for (let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        star.style.animationDuration = (2 + Math.random() * 3) + 's';
+        starsContainer.appendChild(star);
+      }
+    }
+    
+    // 初始化
+    createStars();
+    
+    // 检查URL参数
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auth-success') === 'true') {
+      showModal('授权成功', `欢迎，${decodeURIComponent(urlParams.get('name') || '玩家')}！`);
+    } else if (urlParams.get('auth-failed') === 'true') {
+      showModal('授权失败', urlParams.get('error') || '请稍后重试');
+    }
+    
+    // 加载游戏列表
+    loadGames();
+    
+    // 启动时初始化AI玩家
+    async function initAIs() {
+      try {
+        const res = await fetch('/api/init-ai', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showModal('初始化成功', 'AI玩家已准备就绪！');
+        }
+      } catch (e) {
+        console.error('初始化失败:', e);
+      }
+    }
+    
+    // 开始游戏
+    async function startGame() {
+      const btn = document.getElementById('startGameBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> 正在创建游戏...';
+      
+      try {
+        const res = await fetch('/api/game/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          // 跳转到游戏页面
+          window.location.href = `/game/${data.gameId}`;
+        } else {
+          showModal('创建失败', data.message || '请稍后重试');
+        }
+      } catch (e) {
+        console.error('创建游戏失败:', e);
+        showModal('错误', '网络错误，请重试');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🎮 一键开始游戏';
+      }
+    }
+    
+    // 加载游戏列表
+    async function loadGames() {
+      try {
+        const res = await fetch('/api/games');
+        const data = await res.json();
+        
+        const gameList = document.getElementById('gameList');
+        
+        if (data.games && data.games.length > 0) {
+          gameList.innerHTML = data.games.slice(0, 10).map(game => `
+            <div class="game-item" onclick="location.href='/game/${game.game_id}'">
+              <div>
+                <div class="game-id">${game.game_id.slice(-8).toUpperCase()}</div>
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 5px;">
+                  ${game.total_days}天 · ${game.player_count}人
+                </div>
+              </div>
+              <span class="game-status ${game.status === 'playing' ? 'status-playing' : 'status-ended'}">
+                ${game.status === 'playing' ? '进行中' : '已结束'}
+              </span>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('加载游戏列表失败:', e);
+      }
+    }
+    
+    // SecondMe授权
+    async function authSecondMe() {
+      try {
+        const res = await fetch('/api/invite');
+        const data = await res.json();
+        
+        if (data.authUrl) {
+          window.location.href = data.authUrl;
+        }
+      } catch (e) {
+        console.error('获取授权URL失败:', e);
+      }
+    }
+    
+    // 弹窗相关
+    function showModal(title, message) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalMessage').textContent = message;
+      document.getElementById('modal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+    
+    // 定期刷新游戏列表
+    setInterval(loadGames, 30000);
+  </script>
+</body>
+</html>
