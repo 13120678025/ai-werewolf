@@ -1310,6 +1310,52 @@ app.post('/api/game/create', async (req, res) => {
   }
 });
 
+// ============================================
+// 游戏管理
+// ============================================
+
+// 创建游戏
+app.post('/api/game/create', async (req, res) => {
+  const { userId, name, avatar } = req.body;
+  
+  try {
+    // 创建新游戏
+    const gameId = generateGameId();
+    const game = new WerewolfGame(gameId);
+    
+    if (!userId) {
+      // 纯AI游戏
+      const players = DEFAULT_AI_PLAYERS.map((p, i) => ({
+        ...p,
+        seatNumber: i + 1,
+        role: p.role,
+        roleName: ROLE_CONFIG[p.role].name,
+        team: ROLE_CONFIG[p.role].team,
+        isAi: true
+      }));
+      
+      await game.init(players);
+      game.phase = 'night_wolf';
+      
+      return res.json({
+        success: true,
+        gameId: game.gameId,
+        players: players.map(p => ({
+          userId: p.userId, name: p.name, avatar: p.avatar,
+          role: p.role, roleName: p.roleName, alive: true,
+          seatNumber: p.seatNumber, personality: p.personality
+        })),
+        autoStart: true
+      });
+    }
+    
+    // 人类玩家加入队列（简化处理）
+    res.json({ success: true, message: '功能开发中' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 获取游戏状态
 app.get('/api/game/:gameId', async (req, res) => {
   const game = games.get(req.params.gameId);
