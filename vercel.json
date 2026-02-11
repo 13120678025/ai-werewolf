@@ -1,10 +1,25 @@
 {
-  "buildCommand": "npm install",
-  "outputDirectory": "public",
-  "devCommand": "node server.js",
-  "installCommand": "npm install",
-  "framework": null,
-  "regions": ["iad1"],
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ],
   "env": {
     "POSTGRES_URL": "postgresql://neondb_owner:npg_5SLAR4xtlDvg@ep-young-cherry-a18tuiae-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
     "SECONDME_CLIENT_ID": "f52fe8b4-ec1e-4187-b792-262a54410a7a",
